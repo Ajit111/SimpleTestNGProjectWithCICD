@@ -1,8 +1,7 @@
-name: Run Selenium Tests
+name: Manual Selenium CI
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:   # MANUAL RUN
 
 jobs:
   test:
@@ -29,35 +28,24 @@ jobs:
         sudo apt install -y google-chrome-stable
         google-chrome --version
 
-    - name: Install Latest Matching ChromeDriver (Bulletproof)
+    - name: Install Latest Matching ChromeDriver
       run: |
         sudo apt install -y unzip curl
-
-        echo "Getting latest stable ChromeDriver..."
-        
-        # FETCH latest stable version number
         DRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)
-        echo "Latest ChromeDriver version: $DRIVER_VERSION"
-
-        # BUILD DOWNLOAD URL
         DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
-        echo "Downloading from: $DRIVER_URL"
-
-        # DOWNLOAD & INSTALL
         wget -O chromedriver.zip $DRIVER_URL
         unzip -o chromedriver.zip
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
-
         chromedriver --version
 
-    - name: Build & Run Tests
+    - name: Run Tests
       run: mvn -B clean test
 
-    - name: Upload Test Reports
+    - name: Upload Reports
       uses: actions/upload-artifact@v4
       with:
-        name: selenium-test-reports
+        name: test-reports
         path: |
           target/surefire-reports/
           reports/
