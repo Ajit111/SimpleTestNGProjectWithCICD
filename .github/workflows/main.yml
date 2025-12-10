@@ -29,18 +29,22 @@ jobs:
         sudo apt install -y google-chrome-stable
         google-chrome --version
 
-    - name: Install ChromeDriver (Always Latest Stable - No jq errors)
+    - name: Install Latest Matching ChromeDriver (Bulletproof)
       run: |
         sudo apt install -y unzip curl
 
-        echo "Downloading latest stable ChromeDriver..."
+        echo "Getting latest stable ChromeDriver..."
+        
+        # FETCH latest stable version number
+        DRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)
+        echo "Latest ChromeDriver version: $DRIVER_VERSION"
 
-        LATEST_URL=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json \
-          | grep -oP 'https://.*?chromedriver-linux64.zip')
+        # BUILD DOWNLOAD URL
+        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
+        echo "Downloading from: $DRIVER_URL"
 
-        echo "ChromeDriver Download URL: $LATEST_URL"
-
-        wget -O chromedriver.zip $LATEST_URL
+        # DOWNLOAD & INSTALL
+        wget -O chromedriver.zip $DRIVER_URL
         unzip -o chromedriver.zip
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
