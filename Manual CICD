@@ -1,0 +1,49 @@
+name: Manual Selenium CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Google Chrome
+      run: |
+        sudo apt-get update
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install -y ./google-chrome-stable_current_amd64.deb
+        google-chrome --version
+
+    - name: Install matching ChromeDriver
+      run: |
+        sudo apt-get install -y curl unzip
+        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
+        echo "Downloading $DRIVER_URL"
+
+        wget -O chromedriver.zip "$DRIVER_URL"
+        unzip -o chromedriver.zip
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
+        chromedriver --version
+
+    - name: Run tests
+      run: mvn -B clean test
+
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: selenium-test-reports
+        path: |
+          target/surefire-reports/
