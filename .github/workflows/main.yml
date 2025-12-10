@@ -10,71 +10,46 @@ jobs:
 
     steps:
 
-    # Checkout project
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Install Java
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
         distribution: 'temurin'
+        java-version: '17'
 
-    # Install Chrome
     - name: Install Google Chrome
       run: |
         sudo apt update
         sudo apt install -y wget gnupg
         wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
         sudo apt update
         sudo apt install -y google-chrome-stable
         google-chrome --version
 
-    # Install matching ChromeDriver (FULLY FIXED)
-    - name: Install ChromeDriver
+    - name: Install ChromeDriver (Always Latest Stable - No jq errors)
       run: |
-        sudo apt install -y unzip curl jq
+        sudo apt install -y unzip curl
 
-        CHROME_VERSION=$(google-chrome --version | grep -oP "\d+\.\d+\.\d+")
-        MAJOR=$(echo $CHROME_VERSION | cut -d. -f1)
+        echo "Downloading latest stable ChromeDriver..."
 
-        echo "Detected Chrome Version: $CHROME_VERSION"
-        echo "Major Version: $MAJOR"
+        LATEST_URL=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json \
+          | grep -oP 'https://.*?chromedriver-linux64.zip')
 
-        # Try direct match first
-        DRIVER_URL=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json \
-          | jq -r --arg v "$CHROME_VERSION" '.versions[] | select(.version==$v) | .downloads.chromedriver[0].url')
+        echo "ChromeDriver Download URL: $LATEST_URL"
 
-        # If direct match fails → fallback to MAJOR version match
-        if [ -z "$DRIVER_URL" ] || [ "$DRIVER_URL" == "null" ]; then
-          echo "Exact version not found. Trying fallback for major version $MAJOR"
-          DRIVER_URL=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-per-build.json \
-            | jq -r --arg major "$MAJOR" '.channels.Stable.downloads.chromedriver[0].url')
-        fi
-
-        # Final fallback
-        if [ -z "$DRIVER_URL" ] || [ "$DRIVER_URL" == "null" ]; then
-          echo "Fallback to stable channel"
-          DRIVER_URL=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json \
-            | jq -r '.channels.Stable.downloads.chromedriver[0].url')
-        fi
-
-        echo "Final ChromeDriver URL: $DRIVER_URL"
-
-        wget -O chromedriver.zip "$DRIVER_URL"
+        wget -O chromedriver.zip $LATEST_URL
         unzip -o chromedriver.zip
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
 
         chromedriver --version
 
-    # Build the project
-    - name: Build with Maven
+    - name: Build & Run Tests
       run: mvn -B clean test
 
-    # Upload reports
     - name: Upload Test Reports
       uses: actions/upload-artifact@v4
       with:
