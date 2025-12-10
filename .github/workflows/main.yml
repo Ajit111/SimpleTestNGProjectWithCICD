@@ -9,55 +9,38 @@ jobs:
 
     steps:
 
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
+    - name: Setup JDK 17
       uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
         java-version: '17'
+        distribution: 'temurin'
 
-    # Install Chrome 143 (latest stable)
     - name: Install Google Chrome
       run: |
         sudo apt update
-        sudo apt install -y wget gnupg
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
-          | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt update
-        sudo apt install -y google-chrome-stable
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install -y ./google-chrome-stable_current_amd64.deb
         google-chrome --version
 
-    # Install matching ChromeDriver
     - name: Install matching ChromeDriver
       run: |
         sudo apt install -y unzip curl
-        
-        # Get latest stable ChromeDriver version number
-        DRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)
-
-        echo "ChromeDriver Version: $DRIVER_VERSION"
-
-        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$DRIVER_VERSION/linux64/chromedriver-linux64.zip"
-
-        echo "Downloading from: $DRIVER_URL"
-        
+        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
         wget -O chromedriver.zip "$DRIVER_URL"
         unzip -o chromedriver.zip
-
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
-
         chromedriver --version
 
-    - name: Run Selenium Tests
+    - name: Run tests
       run: mvn -B clean test
 
-    - name: Upload Test Reports
+    - name: Upload test reports
       uses: actions/upload-artifact@v4
       with:
-        name: selenium-test-reports
-        path: |
-          target/surefire-reports/
+        name: reports
+        path: target/surefire-reports/
