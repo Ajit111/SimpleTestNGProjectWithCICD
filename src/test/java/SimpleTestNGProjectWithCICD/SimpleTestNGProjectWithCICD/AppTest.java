@@ -102,6 +102,7 @@ public class AppTest {
 
         find(By.id("user-name")).sendKeys("wrong_user");
         find(By.id("password")).sendKeys("wrong_password");
+        Thread.sleep(5000);
         find(By.id("login-button")).click();
 
         WebElement errorMsg = wait.until(
