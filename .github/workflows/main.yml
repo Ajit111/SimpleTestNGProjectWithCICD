@@ -1,46 +1,73 @@
-name: Manual Selenium CI
+name: Selenium TestNG CI
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+    # -----------------------------
+    # 1. Checkout Code
+    # -----------------------------
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup JDK 17
-      uses: actions/setup-java@v4
+    # -----------------------------
+    # 2. Set up JDK
+    # -----------------------------
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Install Google Chrome
+    # -----------------------------
+    # 3. Install Chrome
+    # -----------------------------
+    - name: Install Chrome Browser
       run: |
-        sudo apt update
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo apt install -y ./google-chrome-stable_current_amd64.deb
-        google-chrome --version
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg unzip
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
 
-    - name: Install matching ChromeDriver
-      run: |
-        sudo apt install -y unzip curl
-        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
-        wget -O chromedriver.zip "$DRIVER_URL"
-        unzip -o chromedriver.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/chromedriver
-        chromedriver --version
+    # -----------------------------
+    # 4. Verify Chrome Installation
+    # -----------------------------
+    - name: Check Chrome Version
+      run: google-chrome --version
 
-    - name: Run tests
-      run: mvn -B clean test
+    # -----------------------------
+    # 5. Build & Run TestNG Tests
+    # -----------------------------
+    - name: Run Maven Tests
+      run: mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testng.xml
 
-    - name: Upload test reports
-      uses: actions/upload-artifact@v4
+    # -----------------------------
+    # 6. Upload Test Reports
+    # -----------------------------
+    - name: Upload TestNG Reports
+      uses: actions/upload-artifact@v3
+      if: always()
       with:
-        name: reports
-        path: target/surefire-reports/
+        name: TestNG-Reports
+        path: target/surefire-reports
+
+    # -----------------------------
+    # 7. Upload Screenshots (if any)
+    # -----------------------------
+    - name: Upload Screenshots
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: Screenshots
+        path: screenshots/
+        if-no-files-found: ignore
