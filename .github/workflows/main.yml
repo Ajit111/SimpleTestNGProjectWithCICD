@@ -1,4 +1,4 @@
-name: Selenium TestNG CI-CD (Final Working Version)
+name: Selenium TestNG CI-CD (Auto Detect XML)
 
 on:
   push:
@@ -12,15 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # -------------------------
-    # CHECKOUT PROJECT
-    # -------------------------
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # -------------------------
-    # INSTALL JAVA
-    # -------------------------
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -28,59 +22,43 @@ jobs:
         distribution: "temurin"
         cache: maven
 
-    # -------------------------
-    # INSTALL GOOGLE CHROME
-    # -------------------------
     - name: Install Chrome
       run: |
         sudo apt-get update
         sudo apt-get install -y wget gnupg2
         wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
-          sudo tee /etc/apt/sources.list.d/google-chrome.list
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
 
-    - name: Check Chrome Version
+    - name: Check Chrome version
       run: google-chrome --version
 
-    # -------------------------
-    # AUTO-DETECT testng.xml
-    # -------------------------
     - name: Locate testng.xml
       id: suitefile
       run: |
         FILE=$(find . -type f -name "testng.xml" | head -n 1)
         echo "Found testng.xml at: $FILE"
-
         if [ -z "$FILE" ]; then
           echo "❌ ERROR: testng.xml not found!"
           exit 1
         fi
-
         echo "path=$FILE" >> $GITHUB_OUTPUT
 
-    # -------------------------
-    # RUN MAVEN TESTS
-    # -------------------------
-    - name: Run Selenium TestNG Tests
+    - name: Run Maven Tests
       env:
-        GITHUB_ACTIONS: true       # enables headless mode in your Java code
+        GITHUB_ACTIONS: true
       run: |
-        echo "👉 Using suite: ${{ steps.suitefile.outputs.path }}"
-        mvn -e -X clean test -Dsurefire.suiteXmlFiles=${{ steps.suitefile.outputs.path }}
+        mvn clean test -Dsurefire.suiteXmlFiles=${{ steps.suitefile.outputs.path }}
 
-    # -------------------------
-    # ALWAYS UPLOAD REPORTS EVEN IF TEST FAILS
-    # -------------------------
     - name: Upload TestNG Reports
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: TestNG-Reports
-        path: target/surefire-reports/
+        path: target/surefire-reports
 
-    - name: Upload Any Screenshots
+    - name: Upload Screenshots
       uses: actions/upload-artifact@v4
       if: always()
       with:
