@@ -13,12 +13,14 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class AppTest {
 
-    WebDriver driver;
-    WebDriverWait wait;
+    private WebDriver driver;
+    private WebDriverWait wait;
 
-    //This is testing project only.
+    // ------------------------------------
+    // SETUP: Works for Manual + CI/CD
+    // ------------------------------------
     @BeforeClass
-    public void setup() throws Exception {
+    public void setup() {
 
         WebDriverManager.chromedriver().setup();
 
@@ -26,17 +28,22 @@ public class AppTest {
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--incognito");
 
+        // CI/CD mode auto-detection
         if (System.getenv("GITHUB_ACTIONS") != null) {
-            System.out.println("Headless mode enabled (GitHub Actions)");
+            System.out.println("Running in GitHub Actions (Headless Mode Enabled)");
+
             options.addArguments("--headless=new");
+            options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--window-size=1920,1080");
         }
 
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
         driver.manage().window().maximize();
+
         driver.get("https://www.saucedemo.com/");
     }
 
@@ -44,22 +51,22 @@ public class AppTest {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
-    // -------------------------
-    // TEST 1: VALID CHECKOUT
-    // -------------------------
+    // ------------------------------------
+    // TEST 1: VALID CHECKOUT FLOW
+    // ------------------------------------
     @Test(priority = 1)
-    public void testValidCheckoutFlow() throws Exception {
+    public void testValidCheckoutFlow() {
 
-        find(By.id("user-name")).sendKeys("standard_user");
-        find(By.id("password")).sendKeys("secret_sauce");
-        find(By.id("login-button")).click();
+        login("standard_user", "secret_sauce");
 
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("add-to-cart-sauce-labs-backpack"))).click();
+                By.id("add-to-cart-sauce-labs-backpack")))
+                .click();
 
         find(By.className("shopping_cart_link")).click();
         find(By.id("checkout")).click();
 
+        // Checkout details
         find(By.id("first-name")).sendKeys("John");
         find(By.id("last-name")).sendKeys("Doe");
         find(By.id("postal-code")).sendKeys("12345");
@@ -67,21 +74,21 @@ public class AppTest {
 
         find(By.id("finish")).click();
 
-        Assert.assertEquals(find(By.className("complete-header")).getText(),
-                "Thank you for your order!");
+        Assert.assertEquals(
+                find(By.className("complete-header")).getText(),
+                "Thank you for your order!"
+        );
     }
 
-    // -------------------------
+    // ------------------------------------
     // TEST 2: INVALID PASSWORD
-    // -------------------------
+    // ------------------------------------
     @Test(priority = 2)
-    public void testInvalidPassword() throws Exception {
+    public void testInvalidPassword() {
 
         driver.get("https://www.saucedemo.com/");
 
-        find(By.id("user-name")).sendKeys("standard_user");
-        find(By.id("password")).sendKeys("wrong_password");
-        find(By.id("login-button")).click();
+        login("standard_user", "wrong_password");
 
         WebElement errorMsg = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
@@ -89,22 +96,21 @@ public class AppTest {
                 )
         );
 
-        Assert.assertTrue(errorMsg.getText().contains("Epic sadface"),
-                "Error message not shown for invalid password!");
+        Assert.assertTrue(
+                errorMsg.getText().contains("Epic sadface"),
+                "Error message not shown for invalid password!"
+        );
     }
 
-    // -------------------------
+    // ------------------------------------
     // TEST 3: INVALID USERNAME + PASSWORD
-    // -------------------------
+    // ------------------------------------
     @Test(priority = 3)
-    public void testInvalidUsername() throws Exception {
+    public void testInvalidUsername() {
 
         driver.get("https://www.saucedemo.com/");
 
-        find(By.id("user-name")).sendKeys("wrong_user");
-        find(By.id("password")).sendKeys("wrong_password");
-        Thread.sleep(5000);
-        find(By.id("login-button")).click();
+        login("wrong_user", "wrong_password");
 
         WebElement errorMsg = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
@@ -112,12 +118,32 @@ public class AppTest {
                 )
         );
 
-        Assert.assertTrue(errorMsg.getText().contains("Epic sadface"),
-                "Error message not shown for invalid username!");
+        Assert.assertTrue(
+                errorMsg.getText().contains("Epic sadface"),
+                "Error message not shown for invalid username!"
+        );
     }
 
-    @AfterClass
-    public void teardown() throws Exception {
-        if (driver != null) driver.quit();
+    // ------------------------------------
+    // REUSABLE LOGIN METHOD
+    // ------------------------------------
+    private void login(String username, String password) {
+        find(By.id("user-name")).clear();
+        find(By.id("user-name")).sendKeys(username);
+
+        find(By.id("password")).clear();
+        find(By.id("password")).sendKeys(password);
+
+        find(By.id("login-button")).click();
+    }
+
+    // ------------------------------------
+    // CLEANUP
+    // ------------------------------------
+    @AfterClass(alwaysRun = true)
+    public void teardown() {
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }
