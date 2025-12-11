@@ -16,6 +16,7 @@ public class AppTest {
     WebDriver driver;
     WebDriverWait wait;
 
+    //This is testing project only.
     @BeforeClass
     public void setup() throws Exception {
 
