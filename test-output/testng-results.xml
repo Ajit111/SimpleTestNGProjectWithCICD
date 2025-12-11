@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results ignored="0" total="1" passed="1" failed="0" skipped="0">
+<testng-results ignored="0" total="3" passed="3" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-12-10T14:45:17 IST" name="Default suite" finished-at="2025-12-10T14:45:44 IST" duration-ms="27228">
+  <suite started-at="2025-12-11T12:33:37 IST" name="Default suite" finished-at="2025-12-11T12:33:41 IST" duration-ms="4700">
     <groups>
     </groups>
-    <test started-at="2025-12-10T14:45:17 IST" name="Default test" finished-at="2025-12-10T14:45:44 IST" duration-ms="27228">
+    <test started-at="2025-12-11T12:33:37 IST" name="Default test" finished-at="2025-12-11T12:33:41 IST" duration-ms="4700">
       <class name="SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest">
-        <test-method is-config="true" signature="setup()[pri:0, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@49e5f737]" started-at="2025-12-10T14:45:17 IST" name="setup" finished-at="2025-12-10T14:45:21 IST" duration-ms="4274" status="PASS">
+        <test-method is-config="true" signature="setup()[pri:0, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@757277dc]" started-at="2025-12-11T12:33:37 IST" name="setup" finished-at="2025-12-11T12:33:40 IST" duration-ms="2819" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- setup -->
-        <test-method signature="testSauceDemoFlow()[pri:0, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@49e5f737]" started-at="2025-12-10T14:45:21 IST" name="testSauceDemoFlow" finished-at="2025-12-10T14:45:42 IST" duration-ms="20654" status="PASS">
+        <test-method signature="testValidCheckoutFlow()[pri:1, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@757277dc]" started-at="2025-12-11T12:33:40 IST" name="testValidCheckoutFlow" finished-at="2025-12-11T12:33:41 IST" duration-ms="1027" status="PASS">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- testSauceDemoFlow -->
-        <test-method is-config="true" signature="teardown()[pri:0, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@49e5f737]" started-at="2025-12-10T14:45:42 IST" name="teardown" finished-at="2025-12-10T14:45:44 IST" duration-ms="2265" status="PASS">
+        </test-method> <!-- testValidCheckoutFlow -->
+        <test-method signature="testInvalidPassword()[pri:2, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@757277dc]" started-at="2025-12-11T12:33:41 IST" name="testInvalidPassword" finished-at="2025-12-11T12:33:41 IST" duration-ms="321" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testInvalidPassword -->
+        <test-method signature="testInvalidUsername()[pri:3, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@757277dc]" started-at="2025-12-11T12:33:41 IST" name="testInvalidUsername" finished-at="2025-12-11T12:33:41 IST" duration-ms="264" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testInvalidUsername -->
+        <test-method is-config="true" signature="teardown()[pri:0, instance:SimpleTestNGProjectWithCICD.SimpleTestNGProjectWithCICD.AppTest@757277dc]" started-at="2025-12-11T12:33:41 IST" name="teardown" finished-at="2025-12-11T12:33:41 IST" duration-ms="228" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- teardown -->
