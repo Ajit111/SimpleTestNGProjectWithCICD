@@ -1,67 +1,38 @@
-name: Selenium TestNG CI-CD (Auto Detect XML)
+name: Selenium TestNG CI (Manual)
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+    branches: [ "main" ]
+  workflow_dispatch:   # 👈 allows manual trigger from GitHub UI
 
 jobs:
-  run-tests:
+  selenium-tests:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # 1️⃣ Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: "17"
-        distribution: "temurin"
-        cache: maven
+      # 2️⃣ Setup Java 8 (required by your project)
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
 
-    - name: Install Chrome
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget gnupg2
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+      # 3️⃣ Verify Java & Maven
+      - name: Verify Java & Maven
+        run: |
+          java -version
+          mvn -version
 
-    - name: Check Chrome version
-      run: google-chrome --version
-
-    - name: Locate testng.xml
-      id: suitefile
-      run: |
-        FILE=$(find . -type f -name "testng.xml" | head -n 1)
-        echo "Found testng.xml at: $FILE"
-        if [ -z "$FILE" ]; then
-          echo "❌ ERROR: testng.xml not found!"
-          exit 1
-        fi
-        echo "path=$FILE" >> $GITHUB_OUTPUT
-
-    - name: Run Maven Tests
-      env:
-        GITHUB_ACTIONS: true
-      run: |
-        mvn clean test -Dsurefire.suiteXmlFiles=${{ steps.suitefile.outputs.path }}
-
-    - name: Upload TestNG Reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: TestNG-Reports
-        path: target/surefire-reports
-
-    - name: Upload Screenshots
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: Screenshots
-        path: screenshots/
-        if-no-files-found: ignore
+      # 4️⃣ Run Selenium TestNG tests
+      - name: Run Selenium TestNG Tests
+        env:
+          GITHUB_ACTIONS: true   # 👈 important for headless detection
+        run: |
+          mvn clean test
