@@ -1,36 +1,75 @@
-name: Selenium TestNG Manual CI
+name: Selenium TestNG CI-CD
 
+# ----------------------------
+# WHEN TO RUN PIPELINE
+# ----------------------------
 on:
-  workflow_dispatch:   # ✅ Manual trigger only
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
+  # 🔹 Manual trigger button
+  workflow_dispatch:
+
+# ----------------------------
+# JOB CONFIGURATION
+# ----------------------------
 jobs:
   selenium-tests:
+    name: Run Selenium TestNG Tests
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout source code
-        uses: actions/checkout@v4
 
-      # 2️⃣ Setup Java 17 (REQUIRED – matches your project)
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
+    # ----------------------------
+    # CHECKOUT SOURCE CODE
+    # ----------------------------
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      # 3️⃣ Verify Java & Maven
-      - name: Verify Java & Maven
-        run: |
-          echo "Java Version:"
-          java -version
-          echo "Maven Version:"
-          mvn -version
+    # ----------------------------
+    # SETUP JAVA
+    # ----------------------------
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      # 4️⃣ Run Selenium TestNG tests (Headless Chrome)
-      - name: Run Selenium Tests
-        env:
-          GITHUB_ACTIONS: true   # 🔥 Enables headless mode in your code
-        run: |
-          mvn clean test
+    # ----------------------------
+    # CACHE MAVEN DEPENDENCIES
+    # ----------------------------
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          maven-
+
+    # ----------------------------
+    # VERIFY JAVA & MAVEN
+    # ----------------------------
+    - name: Verify Java & Maven
+      run: |
+        java -version
+        mvn -version
+
+    # ----------------------------
+    # RUN TESTNG TESTS
+    # ----------------------------
+    - name: Run Selenium TestNG Tests
+      env:
+        GITHUB_ACTIONS: true   # 🔥 enables headless in your code
+      run: mvn clean test
+
+    # ----------------------------
+    # UPLOAD TEST REPORTS
+    # ----------------------------
+    - name: Upload TestNG Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: testng-reports
+        path: target/surefire-reports
