@@ -1,38 +1,37 @@
-name: Selenium TestNG CI (Manual)
+name: Selenium TestNG CI (Manual + Auto)
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:   # 👈 allows manual trigger from GitHub UI
+  workflow_dispatch:   # 👈 manual trigger from GitHub UI
 
 jobs:
   selenium-tests:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout source code
+      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Java 8 (required by your project)
-      - name: Set up JDK 8
+      # 2️⃣ Setup Java 17 (MATCHES your project)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
           cache: maven
 
-      # 3️⃣ Verify Java & Maven
+      # 3️⃣ Verify Java & Maven versions
       - name: Verify Java & Maven
         run: |
           java -version
           mvn -version
 
-      # 4️⃣ Run Selenium TestNG tests
-      - name: Run Selenium TestNG Tests
+      # 4️⃣ Run Selenium TestNG tests (Headless)
+      - name: Run Selenium Tests
         env:
-          GITHUB_ACTIONS: true   # 👈 important for headless detection
-        run: |
-          mvn clean test
+          GITHUB_ACTIONS: true
+        run: mvn clean test
